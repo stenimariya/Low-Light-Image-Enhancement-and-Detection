@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import flask
 import io
+import os
 from PIL import Image
 from flask import jsonify
 
@@ -12,16 +13,12 @@ from detection import detect
 app = flask.Flask(__name__)
 
 
-@app.route("/lowlight", methods=["POST"])
-def predict():
-    # initialize the data dictionary that will be returned from the
-    # view
-    data = {"success": False}
 
-    # ensure an image was properly uploaded to our endpoint
+@app.route("/lowlight", methods=["POST" ])
+def predict():
+    data = {"success": False}
     if flask.request.method == "POST":
         if flask.request.files.get("image"):
-            # read the image in PIL format
             image = flask.request.files["image"].read()
             npimg = np.fromstring(image, np.uint8)
             img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
@@ -33,11 +30,11 @@ def predict():
             img_base64 = base64.b64encode(rawBytes.read())
             data['success'] = True
             data['image'] = str(img_base64)
-    return jsonify(data)
+            return jsonfy(data)
 
 
 @app.route("/detect", methods=["POST"])
-def predict():
+def detection():
     # initialize the data dictionary that will be returned from the
     # view
     data = {"success": False}
@@ -50,6 +47,9 @@ def predict():
             npimg = np.fromstring(image, np.uint8)
             img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
             img = detect(img)
+            cv2.imshow("image", img)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
             img = Image.fromarray(img.astype("uint8"))
             rawBytes = io.BytesIO()
             img.save(rawBytes, "JPEG")
@@ -65,5 +65,6 @@ def predict():
 if __name__ == "__main__":
     print(("* Loading Keras model and Flask starting server..."
            "please wait until server has fully started"))
+ 
 
-    app.run(debug=True)
+    app.run(host='0.0.0.0',port=5000,debug=True)
